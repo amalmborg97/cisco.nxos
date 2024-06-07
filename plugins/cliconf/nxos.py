@@ -167,25 +167,82 @@ class Cliconf(CliconfBase):
                 "'replace' value %s in invalid, valid values are %s"
                 % (diff_replace, ", ".join(option_values["diff_replace"])),
             )
+        
+        cand_pattern = r"(?P<parent>^\w.*\n?)(?P<child>(?:\s+.*\n?)*)"
+        # remove blank lines
+        candidate = re.sub("\n\n", "\n", candidate)
+        candidates = re.findall(cand_pattern, candidate, re.M)
 
-        # prepare candidate configuration
-        candidate_obj = NetworkConfig(indent=2)
-        candidate_obj.load(candidate)
+        diff["config_diff"] = ""
+        diff["banner_diff"] = {}
 
-        if running and diff_match != "none" and diff_replace != "config":
-            # running configuration
-            running_obj = NetworkConfig(indent=2, contents=running, ignore_lines=diff_ignore_lines)
-            configdiffobjs = candidate_obj.difference(
-                running_obj,
-                path=path,
-                match=diff_match,
-                replace=diff_replace,
-            )
+        # exact plus src support. src can have multiple sections as candidates
+        # e.g policy-map foo, policy-map bar, policy-map baz etc.
+        if candidates and not path and diff_match == "exact":
+            for _candidate in candidates:
+                path = [_candidate[0].strip()]
+                _candidate = "".join(_candidate)
+                _candidate_obj = NetworkConfig(indent=1)
+                _candidate_obj.load(_candidate)
 
+                running_obj = NetworkConfig(
+                    indent=1,
+                    contents=running,
+                    ignore_lines=diff_ignore_lines,
+                )
+
+                try:
+                    have_lines = running_obj.get_block(path)
+                except ValueError:
+                    have_lines = []
+                want_lines = _candidate_obj.get_block(path)
+
+                negates = ""
+                negated_parents = []
+                for line in have_lines:
+                    if line not in want_lines:
+                        negates += "".join(
+                            f"{i}\n"
+                            for i in line.parents
+                            if i not in negates and i not in negated_parents
+                        )
+
+                        if line.has_children:
+                            negated_parents.append(line.text)
+
+                        if not any(i in negated_parents for i in line.parents):
+                            negates += f"no {line}\n"
+
+                diff["config_diff"] += negates
+
+                wants = ""
+                for line in want_lines:
+                    if line not in have_lines:
+                        wants += "".join(f"{i}\n" for i in line.parents if i not in wants)
+                        wants += f"{line}\n"
+
+                diff["config_diff"] += wants
+
+            diff["config_diff"] = diff["config_diff"].rstrip()
         else:
-            configdiffobjs = candidate_obj.items
+            # prepare candidate configuration
+            candidate_obj = NetworkConfig(indent=2)
+            candidate_obj.load(candidate)
 
-        diff["config_diff"] = dumps(configdiffobjs, "commands") if configdiffobjs else ""
+            if running and diff_match != "none" and diff_replace != "config":
+                # running configuration
+                running_obj = NetworkConfig(indent=2, contents=running, ignore_lines=diff_ignore_lines)
+                configdiffobjs = candidate_obj.difference(
+                    running_obj,
+                    path=path,
+                    match=diff_match,
+                    replace=diff_replace,
+                )
+
+            else:
+                configdiffobjs = candidate_obj.items
+
+            diff["config_diff"] = dumps(configdiffobjs, "commands") if configdiffobjs else ""
         return diff
 
     def get_config(self, source="running", flags=None, format="text"):
