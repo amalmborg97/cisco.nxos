@@ -4,6 +4,46 @@ Cisco Nxos Collection Release Notes
 
 .. contents:: Topics
 
+v9.2.1
+======
+
+Bugfixes
+--------
+
+- acls - Fix lookup of range port conversion from int to string to allow strings (https://github.com/ansible-collections/cisco.nxos/pull/888).
+- facts - Fixes issue where the LLDP neighbor information returns an error when empty.
+
+Documentation Changes
+---------------------
+
+- Includes a new support related section in the README.
+
+v9.2.0
+======
+
+Minor Changes
+-------------
+
+- nxos_bgp_global - Deprecate local_as with local_as_config which supports more configuration attributes, under neighbor.
+
+Documentation Changes
+---------------------
+
+- nxos_bgp_global - Marks local_as under neighbor deprecated, and some documentation corrections.
+
+v9.1.0
+======
+
+Minor Changes
+-------------
+
+- Add nxos_vrf_global resource module in favor of nxos_vrf module (https://github.com/ansible-collections/cisco.nxos/pull/870).
+
+Bugfixes
+--------
+
+- nxos_snmp_server - correctly render entity traps (https://github.com/ansible-collections/cisco.nxos/issues/820).
+
 v9.0.0
 ======
 
