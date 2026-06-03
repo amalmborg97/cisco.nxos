@@ -29,12 +29,12 @@ Parameters
 
     <table  border=0 cellpadding=0 class="documentation-table">
         <tr>
-            <th colspan="3">Parameter</th>
+            <th colspan="4">Parameter</th>
             <th>Choices/<font color="blue">Defaults</font></th>
             <th width="100%">Comments</th>
         </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -46,12 +46,12 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>A dictionary of Layer-2 interface options</div>
+                        <div>A List of Layer-2 interface options</div>
                 </td>
             </tr>
                                 <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>access</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -68,7 +68,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -85,7 +85,118 @@ Parameters
 
             <tr>
                     <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>beacon</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable/enable the beacon for an interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>cdp_enable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable/disable CDP on the interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>link_flap</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Configure actions on link-flap</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
                 <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>error_disable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Configure the port to error-disable on link-flap</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>count</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Configure the number of link-flaps to trigger the action</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>interval</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Configure the interval to trigger the action</div>
+                </td>
+            </tr>
+
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>mode</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -105,11 +216,12 @@ Parameters
                 <td>
                         <div>Mode in which interface needs to be configured.</div>
                         <div>Access mode is not shown in interface facts, so idempotency will not be maintained for switchport mode access and every time the output will come as changed=True.</div>
+                        <div style="font-size: small; color: darkgreen"><br/>aliases: switchport_mode</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>name</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -126,7 +238,7 @@ Parameters
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
-                <td colspan="2">
+                <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>trunk</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -143,7 +255,7 @@ Parameters
                                 <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>allowed_vlans</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -155,12 +267,36 @@ Parameters
                 </td>
                 <td>
                         <div>List of allowed VLANs in a given trunk port. These are the only VLANs that will be configured on the trunk.</div>
+                        <div>The module would consider 1-4093 as the default range enabled if switchport mode is trunk.</div>
                 </td>
             </tr>
             <tr>
                     <td class="elbow-placeholder"></td>
                     <td class="elbow-placeholder"></td>
-                <td colspan="1">
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>allowed_vlans_none</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>This option governs the `switchport trunk allowed vlan none` configuration</div>
+                        <div>negation of this command would consider 1-4093 as the default.</div>
+                        <div>This attribute does not ensure idempotency.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>native_vlan</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -177,7 +313,7 @@ Parameters
 
 
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>running_config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -194,7 +330,7 @@ Parameters
                 </td>
             </tr>
             <tr>
-                <td colspan="3">
+                <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>state</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
@@ -225,7 +361,7 @@ Notes
 -----
 
 .. note::
-   - Tested against NXOS 7.3.(0)D1(1) on VIRL
+   - Tested against NXOS 10.3(2) on CML
    - Unsupported for Cisco MDS
 
 
@@ -567,6 +703,82 @@ Examples
     #    trunk:
     #      native_vlan: 10
 
+    # Using allowed_vlans_none
+
+    # Before state:
+    # -------------
+    #
+    # switch# show running-config | section interface
+    # interface Ethernet1/1
+    #   switchport mode trunk
+    #   switchport trunk allowed vlan 10-100
+    # interface Ethernet1/2
+    #   switchport mode trunk
+
+    - name: Configure trunk interface to allow no VLANs (block all traffic)
+      cisco.nxos.nxos_l2_interfaces:
+        config:
+          - name: Ethernet1/1
+            trunk:
+              allowed_vlans_none: true
+        state: merged
+
+    # Task Output
+    # -----------
+    #
+    # before:
+    # - name: Ethernet1/1
+    #   trunk:
+    #     allowed_vlans: "10-100"
+    # - name: Ethernet1/2
+    #   trunk:
+    #     allowed_vlans: "1-4094"
+    # commands:
+    # - interface Ethernet1/1
+    # - switchport trunk allowed vlan none
+    # after:
+    # - name: Ethernet1/1
+    #   trunk:
+    #     allowed_vlans_none: true
+    # - name: Ethernet1/2
+    #   trunk:
+    #     allowed_vlans: "1-4094"
+
+    # After state:
+    # ------------
+    #
+    # switch# show running-config | section interface
+    # interface Ethernet1/1
+    #   switchport mode trunk
+    #   switchport trunk allowed vlan none
+    # interface Ethernet1/2
+    #   switchport mode trunk
+
+    # Note: When allowed_vlans_none is not configured on a trunk interface,
+    # the module assumes the default allowed VLANs range of 1-4094.
+    # This is consistent with NX-OS default behavior where all VLANs are
+    # allowed on trunk ports unless explicitly restricted.
+
+    - name: Configure specific VLANs after removing none restriction
+      cisco.nxos.nxos_l2_interfaces:
+        config:
+          - name: Ethernet1/1
+            trunk:
+              allowed_vlans: "10,20,30"
+          - name: Ethernet1/2
+            trunk:
+              allowed_vlans_none: true
+        state: replaced
+
+    # Task Output
+    # -----------
+    #
+    # commands:
+    # - interface Ethernet1/1
+    # - switchport trunk allowed vlan 10,20,30
+    # - interface Ethernet1/2
+    # - switchport trunk allowed vlan none
+
 
 
 Return Values
@@ -634,6 +846,40 @@ Common return values are documented `here <https://docs.ansible.com/ansible/late
                         <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">[&#x27;interface Ethernet1/1&#x27;, &#x27;switchport trunk allowed vlan 2,4,15&#x27;, &#x27;switchport trunk native vlan 10&#x27;, &#x27;interface Ethernet1/2&#x27;, &#x27;switchport access vlan 30&#x27;, &#x27;interface Ethernet1/3&#x27;, &#x27;switchport trunk allowed vlan 5,6,7,8,9,10,15&#x27;, &#x27;switchport trunk native vlan 20&#x27;]</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>gathered</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">list</span>
+                    </div>
+                </td>
+                <td>when <em>state</em> is <code>gathered</code></td>
+                <td>
+                            <div>Facts about the network resource gathered from the remote device as structured data.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">This output will always be in the same format as the module argspec.</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="return-"></div>
+                    <b>parsed</b>
+                    <a class="ansibleOptionLink" href="#return-" title="Permalink to this return value"></a>
+                    <div style="font-size: small">
+                      <span style="color: purple">list</span>
+                    </div>
+                </td>
+                <td>when <em>state</em> is <code>parsed</code></td>
+                <td>
+                            <div>The device native config provided in <em>running_config</em> option parsed into structured data as per module argspec.</div>
+                    <br/>
+                        <div style="font-size: smaller"><b>Sample:</b></div>
+                        <div style="font-size: smaller; color: blue; word-wrap: break-word; word-break: break-all;">This output will always be in the same format as the module argspec.</div>
+                </td>
+            </tr>
     </table>
     <br/><br/>
 
@@ -646,3 +892,4 @@ Authors
 ~~~~~~~
 
 - Trishna Guha (@trishnaguha)
+- Vinay Mulugund (@roverflow)

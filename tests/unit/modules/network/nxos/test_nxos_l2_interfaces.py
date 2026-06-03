@@ -1,0 +1,652 @@
+# (c) 2019 Red Hat Inc.
+#
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+
+# Make coding more python3-ish
+
+from __future__ import absolute_import, division, print_function
+
+
+__metaclass__ = type
+
+from textwrap import dedent
+from unittest.mock import patch
+
+from ansible_collections.cisco.nxos.plugins.modules import nxos_l2_interfaces
+from ansible_collections.cisco.nxos.tests.unit.modules.utils import set_module_args
+
+from .nxos_module import TestNxosModule
+
+
+ignore_provider_arg = True
+
+
+class TestNxosL2InterfacesModule(TestNxosModule):
+    module = nxos_l2_interfaces
+
+    def setUp(self):
+        super(TestNxosL2InterfacesModule, self).setUp()
+
+        self.mock_get_resource_connection_facts = patch(
+            "ansible_collections.ansible.netcommon.plugins.module_utils.network.common.rm_base.resource_module_base."
+            "get_resource_connection",
+        )
+        self.get_resource_connection_facts = self.mock_get_resource_connection_facts.start()
+
+        self.mock_execute_show_command = patch(
+            "ansible_collections.cisco.nxos.plugins.module_utils.network.nxos.facts.l2_interfaces.l2_interfaces."
+            "L2_interfacesFacts._get_interface_config",
+        )
+        self.execute_show_command = self.mock_execute_show_command.start()
+
+        self.maxDiff = None
+
+    def tearDown(self):
+        super(TestNxosL2InterfacesModule, self).tearDown()
+        self.mock_get_resource_connection_facts.stop()
+        self.mock_execute_show_command.stop()
+
+    def test_l2_interfaces_gathered(self):
+        self.execute_show_command.return_value = dedent(
+            """
+            interface Ethernet1/6
+             switchport
+             switchport mode trunk
+             switchport access vlan 20
+             switchport trunk native vlan 40
+             switchport trunk allowed vlan 30-45,47
+             switchport trunk allowed vlan add 50,52,54
+            interface Ethernet1/2
+             switchport mode trunk
+             switchport trunk native vlan 20
+             switchport trunk allowed vlan 10,20,30
+            interface Ethernet1/4
+             speed 1000
+             service-policy type qos output test-policy
+             no shutdown
+            """,
+        )
+
+        set_module_args(
+            dict(
+                state="gathered",
+            ),
+        )
+
+        expected = [
+            {
+                "access": {"vlan": 20},
+                "mode": "trunk",
+                "name": "Ethernet1/6",
+                "trunk": {
+                    "allowed_vlans": "30-45,47,50,52,54",
+                    "native_vlan": 40,
+                },
+            },
+            {
+                "mode": "trunk",
+                "name": "Ethernet1/2",
+                "trunk": {
+                    "allowed_vlans": "10,20,30",
+                    "native_vlan": 20,
+                },
+            },
+            {
+                "name": "Ethernet1/4",
+            },
+        ]
+
+        result = self.execute_module(changed=False)
+        self.assertEqual(result["gathered"], expected)
+
+    def test_l2_interfaces_parsed(self):
+        set_module_args(
+            dict(
+                running_config=dedent(
+                    """
+                    interface nve1
+                     no shutdown
+                     host-reachability protocol bgp
+                     advertise virtual-rmac
+                     source-interface loopback1
+                    interface Ethernet1/799
+                     switchport mode dot1q-tunnel
+                    interface Ethernet1/800
+                     switchport access vlan 18
+                     switchport trunk allowed vlan 210
+                     switchport trunk allowed vlan add 300,310
+                    interface Ethernet1/801
+                     switchport trunk allowed vlan 2,4,15
+                    interface Ethernet1/802
+                     switchport mode fex-fabric
+                    interface Ethernet1/803
+                     switchport mode fabricpath
+                    interface loopback1
+                    """,
+                ),
+                state="parsed",
+            ),
+        )
+
+        expected = [
+            {
+                "name": "nve1",
+            },
+            {
+                "mode": "dot1q-tunnel",
+                "name": "Ethernet1/799",
+            },
+            {
+                "access": {
+                    "vlan": 18,
+                },
+                "name": "Ethernet1/800",
+                "trunk": {
+                    "allowed_vlans": "210,300,310",
+                },
+            },
+            {
+                "name": "Ethernet1/801",
+                "trunk": {
+                    "allowed_vlans": "2,4,15",
+                },
+            },
+            {
+                "mode": "fex-fabric",
+                "name": "Ethernet1/802",
+            },
+            {
+                "mode": "fabricpath",
+                "name": "Ethernet1/803",
+            },
+            {
+                "name": "loopback1",
+            },
+        ]
+
+        result = self.execute_module(changed=False)
+        self.assertEqual(result["parsed"], expected)
+
+    def test_l2_interfaces_merged(self):
+        self.execute_show_command.return_value = dedent(
+            """
+            default interface Ethernet1/6
+            interface Ethernet1/6
+             switchport
+             no cdp enable
+            interface Ethernet1/7
+             switchport mode trunk
+             switchport trunk allowed vlan 23-100
+            interface Ethernet1/8
+             switchport mode trunk
+             no cdp enable
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/6",
+                        "mode": "trunk",
+                        "trunk": {
+                            "allowed_vlans": "10-12",
+                        },
+                        "cdp_enable": True,
+                    },
+                    {
+                        "name": "Ethernet1/7",
+                        "mode": "trunk",
+                        "trunk": {
+                            "allowed_vlans": "21-101",
+                        },
+                    },
+                    {
+                        "name": "Ethernet1/8",
+                        "mode": "trunk",
+                        "trunk": {
+                            "native_vlan": 10,
+                            "allowed_vlans": "1-4000",
+                        },
+                    },
+                ],
+            ),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/6",
+            "cdp enable",
+            "switchport mode trunk",
+            "switchport trunk allowed vlan add 10-12",
+            "interface Ethernet1/7",
+            "switchport trunk allowed vlan add 21-22,101",
+            "interface Ethernet1/8",
+            "switchport trunk native vlan 10",
+            "switchport trunk allowed vlan add 1-4000",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_l2_interfaces_merged_subset_superset(self):
+        self.execute_show_command.return_value = dedent(
+            """
+            default interface Ethernet1/6
+            interface Ethernet1/6
+             switchport
+             no cdp enable
+            interface Ethernet1/7
+             switchport mode trunk
+             switchport trunk allowed vlan 23-100
+            interface Ethernet1/8
+             switchport mode trunk
+             no cdp enable
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/6",
+                        "mode": "trunk",
+                        "trunk": {
+                            "allowed_vlans": "10-12",
+                        },
+                        "cdp_enable": True,
+                    },
+                    {
+                        "name": "Ethernet1/7",
+                        "mode": "trunk",
+                        "trunk": {
+                            "allowed_vlans": "23-99",
+                        },
+                    },
+                    {
+                        "name": "Ethernet1/8",
+                        "mode": "trunk",
+                        "trunk": {
+                            "native_vlan": 10,
+                            "allowed_vlans": "1-4094",
+                        },
+                    },
+                    {
+                        "name": "Ethernet1/9",
+                        "mode": "trunk",
+                        "trunk": {
+                            "native_vlan": 18,
+                            "allowed_vlans": "222",
+                        },
+                    },
+                ],
+            ),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/6",
+            "cdp enable",
+            "switchport mode trunk",
+            "switchport trunk allowed vlan add 10-12",
+            "interface Ethernet1/8",
+            "switchport trunk native vlan 10",
+            "switchport trunk allowed vlan add 1-4094",
+            "interface Ethernet1/9",
+            "switchport mode trunk",
+            "switchport trunk native vlan 18",
+            "switchport trunk allowed vlan add 222",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_l2_interfaces_replaced(self):
+        self.execute_show_command.return_value = dedent(
+            """
+            default interface Ethernet1/6
+            default interface Ethernet1/7
+            default interface Ethernet1/8
+            interface Ethernet1/6
+             switchport
+             switchport access vlan 5
+            interface Ethernet1/7
+             switchport
+             switchport trunk native vlan 15
+             switchport trunk allowed vlan 25-27
+            interface Ethernet1/8
+             switchport
+             switchport trunk allowed vlan 100-200
+             switchport trunk allowed vlan add 250
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/6",
+                        "access": {
+                            "vlan": "8",
+                        },
+                        "trunk": {
+                            "allowed_vlans": "10-12",
+                        },
+                    },
+                    {
+                        "name": "Ethernet1/7",
+                        "trunk": {
+                            "native_vlan": 25,
+                            "allowed_vlans": "25-27",
+                        },
+                    },
+                    {
+                        "name": "Ethernet1/8",
+                        "trunk": {
+                            "allowed_vlans": "33",
+                        },
+                        "cdp_enable": True,
+                    },
+                ],
+                state="replaced",
+            ),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/6",
+            "no cdp enable",
+            "switchport access vlan 8",
+            "switchport trunk allowed vlan add 10-12",
+            "interface Ethernet1/7",
+            "no cdp enable",
+            "switchport trunk native vlan 25",
+            "interface Ethernet1/8",
+            "switchport trunk allowed vlan remove 100-200,250",
+            "switchport trunk allowed vlan add 33",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_l2_interfaces_replaced_with_multiple_add_lines_idempotent(self):
+        """Test idempotency when device has multiple add lines that match desired config"""
+        self.execute_show_command.return_value = dedent(
+            """
+            interface Ethernet1/10
+             no cdp enable
+             switchport
+             switchport trunk allowed vlan 10-20
+             switchport trunk allowed vlan add 30-40
+             switchport trunk allowed vlan add 50-60
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/10",
+                        "trunk": {
+                            "allowed_vlans": "10-20,30-40,50-60",
+                        },
+                    },
+                ],
+                state="replaced",
+            ),
+        )
+
+        result = self.execute_module(changed=False)
+        self.assertEqual(result["commands"], [])
+
+    def test_l2_interfaces_replaced_with_multiple_add_lines_partial_remove(self):
+        """Test replaced state removes VLANs correctly when device has multiple add lines"""
+        self.execute_show_command.return_value = dedent(
+            """
+            interface Ethernet1/10
+             switchport
+             switchport trunk allowed vlan 10-20
+             switchport trunk allowed vlan add 30-40
+             switchport trunk allowed vlan add 50-60
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/10",
+                        "trunk": {
+                            "allowed_vlans": "10-20",
+                        },
+                    },
+                ],
+                state="replaced",
+            ),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/10",
+            "no cdp enable",
+            "switchport trunk allowed vlan remove 30-40,50-60",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_l2_interfaces_overridden(self):
+        self.execute_show_command.return_value = dedent(
+            """
+            default interface Ethernet1/6
+            default interface Ethernet1/7
+            interface Ethernet1/6
+             switchport
+             switchport trunk allowed vlan 11
+            interface Ethernet1/7
+             switchport
+             switchport trunk allowed vlan 10-500
+             switchport trunk allowed vlan add 5
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/7",
+                        "access": {
+                            "vlan": "6",
+                        },
+                        "trunk": {
+                            "allowed_vlans": "10-12",
+                        },
+                    },
+                ],
+                state="overridden",
+            ),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/6",
+            "no switchport trunk allowed vlan",
+            "interface Ethernet1/7",
+            "no cdp enable",
+            "switchport access vlan 6",
+            "switchport trunk allowed vlan remove 5,13-500",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_l2_interfaces_overridden_idempotent_and_section(self):
+        self.execute_show_command.return_value = dedent(
+            """
+            interface Ethernet1/6
+             no cdp enable
+             switchport
+             switchport access vlan 6
+             switchport trunk allowed vlan 10-500
+            interface Ethernet1/7
+             no cdp enable
+             switchport
+             switchport access vlan 6
+             switchport trunk allowed vlan 10-500
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/6",
+                        "access": {
+                            "vlan": "6",
+                        },
+                        "trunk": {
+                            "allowed_vlans": "20-250,350,3999",
+                        },
+                    },
+                    {
+                        "name": "Ethernet1/7",
+                        "access": {
+                            "vlan": "6",
+                        },
+                        "trunk": {
+                            "allowed_vlans": "10-500",
+                        },
+                    },
+                ],
+                state="overridden",
+            ),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/6",
+            "switchport trunk allowed vlan remove 10-19,251-349,351-500",
+            "switchport trunk allowed vlan add 3999",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_l2_interfaces_overridden_with_multiple_add_lines_idempotent(self):
+        """Test idempotency in overridden state with multiple add lines"""
+        self.execute_show_command.return_value = dedent(
+            """
+            interface Ethernet1/10
+             no cdp enable
+             switchport
+             switchport trunk allowed vlan 100
+             switchport trunk allowed vlan add 200
+             switchport trunk allowed vlan add 300-350
+            interface Ethernet1/11
+             no cdp enable
+             switchport
+             switchport trunk allowed vlan 10-50
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/10",
+                        "trunk": {
+                            "allowed_vlans": "100,200,300-350",
+                        },
+                    },
+                    {
+                        "name": "Ethernet1/11",
+                        "trunk": {
+                            "allowed_vlans": "10-50",
+                        },
+                    },
+                ],
+                state="overridden",
+            ),
+        )
+
+        result = self.execute_module(changed=False)
+        self.assertEqual(result["commands"], [])
+
+    def test_l2_interfaces_overridden_with_multiple_add_lines_partial_remove(self):
+        """Test overridden state removes VLANs correctly with multiple add lines"""
+        self.execute_show_command.return_value = dedent(
+            """
+            interface Ethernet1/10
+             switchport
+             switchport trunk allowed vlan 10
+             switchport trunk allowed vlan add 20
+             switchport trunk allowed vlan add 30
+            interface Ethernet1/11
+             switchport
+             switchport trunk allowed vlan 100-200
+            """,
+        )
+
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "name": "Ethernet1/10",
+                        "trunk": {
+                            "allowed_vlans": "10",
+                        },
+                    },
+                ],
+                state="overridden",
+            ),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/11",
+            "no switchport trunk allowed vlan",
+            "interface Ethernet1/10",
+            "no cdp enable",
+            "switchport trunk allowed vlan remove 20,30",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_l2_interfaces_deleted(self):
+        self.execute_show_command.return_value = dedent(
+            """
+            default interface Ethernet1/6
+            default interface Ethernet1/7
+            interface Ethernet1/6
+             switchport
+             switchport trunk native vlan 10
+            interface Ethernet1/7
+             switchport
+             switchport mode trunk
+             switchport trunk allowed vlan 20
+             switchport trunk allowed vlan add 20
+            """,
+        )
+
+        set_module_args(
+            dict(state="deleted"),
+        )
+
+        expected_commands = [
+            "interface Ethernet1/6",
+            "no switchport trunk native vlan 10",
+            "no switchport trunk allowed vlan",
+            "interface Ethernet1/7",
+            "no switchport mode trunk",
+            "no switchport trunk allowed vlan",
+        ]
+
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)

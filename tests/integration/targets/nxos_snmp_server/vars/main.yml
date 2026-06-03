@@ -3,30 +3,15 @@ merged:
   before:
     users:
       auth:
-        - user: admin
-          group: network-admin
-          authentication:
+        - authentication:
             algorithm: md5
+            localizedv2_key: true
             password: "{{ admin_snmp_passwd }}"
-            localized_key: true
             priv:
-              privacy_password: "{{ admin_snmp_passwd }}"
-        - authentication:
-            algorithm: md5
-            engine_id: "{{ admin_snmp_engineid_2 }}"
-            localized_key: true
-            password: "{{ admin_snmp_passwd_2 }}"
-            priv:
-              privacy_password: "{{ admin_snmp_passwd_2 }}"
-          user: admin
-        - authentication:
-            algorithm: md5
-            localized_key: true
-            password: "{{ zuul_snmp_passwd }}"
-            priv:
-              privacy_password: "{{ zuul_snmp_passwd }}"
+              aes_128: true
+              privacy_password: "{{ admin_snmp_priv_key }}"
           group: network-admin
-          user: zuul
+          user: admin
   commands:
     - snmp-server contact nxosswitchadmin@localhost
     - snmp-server location serverroom-1
@@ -72,19 +57,12 @@ merged:
       auth:
         - authentication:
             algorithm: md5
-            localized_key: true
+            localizedv2_key: true
             password: "{{ admin_snmp_passwd }}"
             priv:
-              privacy_password: "{{ admin_snmp_passwd }}"
+              aes_128: true
+              privacy_password: "{{ admin_snmp_priv_key }}"
           group: network-admin
-          user: admin
-        - authentication:
-            algorithm: md5
-            engine_id: "{{ admin_snmp_engineid_2 }}"
-            localized_key: true
-            password: "{{ admin_snmp_passwd_2 }}"
-            priv:
-              privacy_password: "{{ admin_snmp_passwd_2 }}"
           user: admin
         - authentication:
             algorithm: md5
@@ -101,14 +79,6 @@ merged:
               privacy_password: "0x5632724fb8ac3699296af26281e1d0f1"
           group: network-operator
           user: snmp_user_2
-        - authentication:
-            algorithm: md5
-            localized_key: true
-            password: "{{ zuul_snmp_passwd }}"
-            priv:
-              privacy_password: "{{ zuul_snmp_passwd }}"
-          group: network-admin
-          user: zuul
       use_acls:
         - ipv4: acl1
           ipv6: acl2
@@ -117,16 +87,31 @@ merged:
           ipv6: acl4
           user: snmp_user_2
 
+overridden:
+  commands:
+    - snmp-server contact nxosswitchadmin2@localhost
+    - snmp-server enable traps aaa server-state-change
+    - no snmp-server enable traps system Clock-change-notification
+    - snmp-server location serverroom-2
+    - snmp-server user cisco network-admin auth md5 00749D0F05537C2D802A7DA4502626BF88DC
+      priv aes-128 332CFD752312713BED674598193B38F893D3 localizedV2key
+    - no snmp-server user ansible
+    - no snmp-server user temp_user
+    - snmp-server host 192.0.2.1 source-interface Ethernet1/1
+    - snmp-server host 192.0.3.2 informs version 3 auth NMS
+    - snmp-server community secret group network-operator
+    - no snmp-server community private group network-admin
+
 replaced:
   commands:
     - snmp-server contact nxosswitchadmin2@localhost
+    - snmp-server enable traps aaa server-state-change
     - no snmp-server enable traps system Clock-change-notification
     - snmp-server location serverroom-2
-    - no snmp-server user snmp_user_2 use-ipv4acl acl3 use-ipv6acl acl4
-    - no snmp-server host 192.0.2.2 informs version 3 auth NMS
+    - snmp-server host 192.0.2.1 source-interface Ethernet1/1
     - snmp-server host 192.0.3.2 informs version 3 auth NMS
-    - no snmp-server community private group network-admin
     - snmp-server community secret group network-operator
+    - no snmp-server community private group network-admin
   after:
     aaa_user:
       cache_timeout: 36000
@@ -158,19 +143,10 @@ replaced:
           authentication:
             algorithm: md5
             password: "{{ admin_snmp_passwd }}"
-            localized_key: true
+            localizedv2_key: true
             priv:
-              privacy_password: "{{ admin_snmp_passwd }}"
-
-        - user: admin
-          authentication:
-            algorithm: md5
-            engine_id: "{{ admin_snmp_engineid_2 }}"
-            localized_key: true
-            password: "{{ admin_snmp_passwd_2 }}"
-            priv:
-              privacy_password: "{{ admin_snmp_passwd_2 }}"
-
+              aes_128: true
+              privacy_password: "{{ admin_snmp_priv_key }}"
         - user: snmp_user_1
           group: network-operator
           authentication:
@@ -187,15 +163,6 @@ replaced:
             priv:
               privacy_password: "0x5632724fb8ac3699296af26281e1d0f1"
               aes_128: true
-
-        - authentication:
-            algorithm: md5
-            localized_key: true
-            password: "{{ zuul_snmp_passwd }}"
-            priv:
-              privacy_password: "{{ zuul_snmp_passwd }}"
-          group: network-admin
-          user: zuul
 
       use_acls:
         - user: snmp_user_1

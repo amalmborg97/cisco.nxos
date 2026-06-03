@@ -10,8 +10,6 @@ __metaclass__ = type
 import platform
 import re
 
-from ansible.module_utils.six import iteritems
-
 from ansible_collections.cisco.nxos.plugins.module_utils.network.nxos.nxos import (
     get_capabilities,
     get_config,
@@ -38,7 +36,7 @@ class FactsBase(object):
 
     def run(self, command, output="text"):
         command_string = command
-        if output == "json":
+        if output == "json" and self.capabilities.get("network_api") != "nxapi":
             # Not all devices support | json-pretty but is a workaround for
             # libssh issue https://github.com/ansible/pylibssh/issues/208
             output = "json-pretty"
@@ -169,6 +167,10 @@ class Hardware(FactsBase):
             self.facts["cpu_utilization"] = self.parse_cpu_utilization(data)
 
     def parse_cpu_utilization(self, data):
+        onemin = data.get("onemin_percent", ["0"])
+        if not isinstance(onemin, list):
+            onemin = [str(onemin)]
+        onemin_value = onemin[0]
         return {
             "core": {
                 "five_minutes": int(data.get("fivemin_percent", 0)),
@@ -178,7 +180,7 @@ class Hardware(FactsBase):
                 "five_seconds_interrupt": int(
                     data.get("fivesec_intr_percent", 0),
                 ),
-                "one_minute": int(data.get("onemin_percent", 0)),
+                "one_minute": int(onemin_value),
             },
         }
 
@@ -249,6 +251,7 @@ class Interfaces(FactsBase):
         self.facts["neighbors"] = {}
         data = None
 
+        # Gets the interface data
         data = self.run("show interface", output="json")
 
         if data:
@@ -259,7 +262,7 @@ class Interfaces(FactsBase):
                 self.facts["interfaces"] = self.populate_interfaces(interfaces)
 
         if self.ipv6_structure_op_supported():
-            data = self.run("show ipv6 interface", output="json")
+            data = self.run("show ipv6 interface vrf all", output="json")
         else:
             data = None
         if data:
@@ -328,13 +331,28 @@ class Interfaces(FactsBase):
                     if isinstance(row_intf, dict):
                         row_intf = [row_intf]
                     for item in row_intf:
-                        intf = self.facts["interfaces"][item["intf-name"]]
+                        name = item["intf-name"]
+                        intf = self.facts["interfaces"][name]
                         intf["ipv6"] = self.transform_dict(item, self.INTERFACE_IPV6_MAP)
-                        try:
-                            addr = item["addr"]
-                        except KeyError:
-                            addr = item["TABLE_addr"]["ROW_addr"]["addr"]
-                        self.facts["all_ipv6_addresses"].append(addr)
+
+                        # Check for IPv6 address: top-level addr or TABLE_addr/ROW_addr
+                        # ROW_addr can be dict (single address) or list (multiple addresses)
+                        addr = item.get("addr")
+                        if addr:
+                            self.facts["all_ipv6_addresses"].append(addr)
+                        else:
+                            table_addr = item.get("TABLE_addr")
+                            if isinstance(table_addr, dict):
+                                row_addr = table_addr.get("ROW_addr")
+                                if row_addr is not None:
+                                    if isinstance(row_addr, dict):
+                                        row_addr = [row_addr]
+                                    for row in row_addr:
+                                        if isinstance(row, dict):
+                                            addr = row.get("addr")
+                                            if addr:
+                                                self.facts["all_ipv6_addresses"].append(addr)
+                        # Interface has IPv6 enabled but no address configured - skip silently
             else:
                 return ""
         except TypeError:
@@ -403,7 +421,7 @@ class Interfaces(FactsBase):
 
     def populate_interfaces(self, interfaces):
         facts = dict()
-        for key, value in iteritems(interfaces):
+        for key, value in interfaces.items():
             intf = dict()
             if get_interface_type(key) == "svi":
                 intf["state"] = self.parse_state(key, value, intf_type="svi")
@@ -557,7 +575,7 @@ class Interfaces(FactsBase):
 
     def populate_ipv6_interfaces(self, interfaces):
         facts = dict()
-        for key, value in iteritems(interfaces):
+        for key, value in interfaces.items():
             intf = dict()
             intf["ipv6"] = self.parse_ipv6_address(value)
             facts[key] = intf

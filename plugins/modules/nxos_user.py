@@ -191,7 +191,6 @@ from copy import deepcopy
 from functools import partial
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.six import iteritems
 from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.utils import (
     remove_default_spec,
     to_list,
@@ -387,7 +386,7 @@ def map_params_to_obj(module):
             },
         )
 
-        for key, value in iteritems(item):
+        for key, value in item.items():
             if value:
                 # validate the param value (if validator func exists)
                 validator = globals().get("validate_%s" % key)
@@ -406,10 +405,23 @@ def update_objects(want, have):
         if all((item is None, entry["state"] == "present")):
             updates.append((entry, {}))
         elif item:
-            for key, value in iteritems(entry):
+            for key, value in entry.items():
                 if value and value != item[key]:
                     updates.append((entry, item))
     return updates
+
+
+def get_configured_usernames(module):
+    config_output = run_commands(
+        module,
+        [{"command": "show running-config | section ^username", "output": "text"}],
+    )
+    usernames = set()
+    for line in config_output[0].splitlines():
+        if line.startswith("username "):
+            username = line.split()[1]
+            usernames.add(username)
+    return usernames
 
 
 def main():
@@ -457,8 +469,9 @@ def main():
     commands = map_obj_to_commands(update_objects(want, have), module)
 
     if module.params["purge"]:
-        want_users = [x["name"] for x in want]
-        have_users = [x["name"] for x in have]
+        want_users = set([x["name"] for x in want])
+        have_users = get_configured_usernames(module)
+
         for item in set(have_users).difference(want_users):
             if item != "admin":
                 item = item.replace("\\", "\\\\")

@@ -1,21 +1,18 @@
 # Cisco NX-OS Collection
-[![Codecov](https://codecov.io/gh/ansible-collections/cisco.nxos/branch/main/graph/badge.svg)](https://codecov.io/gh/ansible-collections/cisco.nxos)
 [![CI](https://github.com/ansible-collections/cisco.nxos/actions/workflows/tests.yml/badge.svg?branch=main&event=schedule)](https://github.com/ansible-collections/cisco.nxos/actions/workflows/tests.yml)
+[![Integration tests 💻](https://github.com/ansible-collections/cisco.nxos/actions/workflows/integration-libssh.yml/badge.svg?branch=main)](https://github.com/ansible-collections/cisco.nxos/actions/workflows/integration-libssh.yml)
 
 The Ansible Cisco NX-OS collection includes a variety of Ansible content to help automate the management of Cisco NX-OS network appliances.
 
 The Cisco NX-OS connection plugins combined with Cisco NX-OS resource modules aligns the Cisco NX-OS experience with the other core networking platforms supported by Ansible.
 
-This collection has been tested against Cisco N9K-C9300v chassis running NX-OS 9.3.6.
-The modules with full support for Cisco MDS are tested against NX-OS 8.4(1) on MDS Switches.
+The modules with full support for Cisco MDS are tested against NX-OS 8.4(1) and 9.4(3a) on MDS Switches. The modules should work for all releases above 8.4(1)
 
 ## Support
 
-As a Red Hat Ansible [Certified Content](https://catalog.redhat.com/software/search?target_platforms=Red%20Hat%20Ansible%20Automation%20Platform), this collection is entitled to [support](https://access.redhat.com/support/) through [Ansible Automation Platform](https://www.redhat.com/en/technologies/management/ansible) (AAP).
+As Red Hat Ansible Certified Content, this collection is entitled to support through the Ansible Automation Platform (AAP) using the **Create issue** button on the top right corner. If a support case cannot be opened with Red Hat and the collection has been obtained either from Galaxy or GitHub, there may community help available on the [Ansible Forum](https://forum.ansible.com/).
 
-If a support case cannot be opened with Red Hat and the collection has been obtained either from [Galaxy](https://galaxy.ansible.com/ui/) or [GitHub](https://github.com/ansible-collections/cisco.nxos), there is community support available at no charge.
-
-You can join us on [#network:ansible.com](https://matrix.to/#/#network:ansible.com) room or the [Ansible Forum Network Working Group](https://forum.ansible.com/g/network-wg).
+Additionally, you can join us on [#network:ansible.com](https://matrix.to/#/#network:ansible.com) room or the [Ansible Forum Network Working Group](https://forum.ansible.com/g/network-wg).
 
 For more information you can check the communication section below.
 
@@ -35,10 +32,8 @@ For more information about communication, see the [Ansible communication guide](
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against following Ansible versions: **>=2.15.0**.
+This collection has been tested against the following Ansible versions: **>=2.16.0**.
 
-For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
-fully qualified collection name (for example, `cisco.ios.ios`).
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
@@ -90,7 +85,7 @@ Name | Description
 [cisco.nxos.nxos_gir](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_gir_module.rst)|Trigger a graceful removal or insertion (GIR) of the switch.
 [cisco.nxos.nxos_gir_profile_management](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_gir_profile_management_module.rst)|Create a maintenance-mode or normal-mode profile for GIR.
 [cisco.nxos.nxos_hostname](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_hostname_module.rst)|Hostname resource module.
-[cisco.nxos.nxos_hsrp](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_hsrp_module.rst)|Manages HSRP configuration on NX-OS switches.
+[cisco.nxos.nxos_hsrp](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_hsrp_module.rst)|(deprecated, removed after 2028-06-01) Manages HSRP configuration on NX-OS switches.
 [cisco.nxos.nxos_hsrp_interfaces](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_hsrp_interfaces_module.rst)|HSRP interfaces resource module
 [cisco.nxos.nxos_igmp](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_igmp_module.rst)|Manages IGMP global configuration.
 [cisco.nxos.nxos_igmp_interface](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_igmp_interface_module.rst)|Manages IGMP interface configuration.
@@ -121,13 +116,7 @@ Name | Description
 [cisco.nxos.nxos_route_maps](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_route_maps_module.rst)|Route Maps resource module.
 [cisco.nxos.nxos_rpm](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_rpm_module.rst)|Install patch or feature rpms on Cisco NX-OS devices.
 [cisco.nxos.nxos_snapshot](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snapshot_module.rst)|Manage snapshots of the running states of selected features.
-[cisco.nxos.nxos_snmp_community](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snmp_community_module.rst)|(deprecated, removed after 2024-01-01) Manages SNMP community configs.
-[cisco.nxos.nxos_snmp_contact](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snmp_contact_module.rst)|(deprecated, removed after 2024-01-01) Manages SNMP contact info.
-[cisco.nxos.nxos_snmp_host](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snmp_host_module.rst)|(deprecated, removed after 2024-01-01) Manages SNMP host configuration.
-[cisco.nxos.nxos_snmp_location](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snmp_location_module.rst)|(deprecated, removed after 2024-01-01) Manages SNMP location information.
 [cisco.nxos.nxos_snmp_server](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snmp_server_module.rst)|SNMP Server resource module.
-[cisco.nxos.nxos_snmp_traps](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snmp_traps_module.rst)|(deprecated, removed after 2024-01-01) Manages SNMP traps.
-[cisco.nxos.nxos_snmp_user](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_snmp_user_module.rst)|(deprecated, removed after 2024-01-01) Manages SNMP users for monitoring.
 [cisco.nxos.nxos_static_routes](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_static_routes_module.rst)|Static routes resource module
 [cisco.nxos.nxos_system](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_system_module.rst)|Manage the system attributes on Cisco NXOS devices
 [cisco.nxos.nxos_telemetry](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_telemetry_module.rst)|TELEMETRY resource module
@@ -138,9 +127,11 @@ Name | Description
 [cisco.nxos.nxos_vpc](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vpc_module.rst)|Manages global VPC configuration
 [cisco.nxos.nxos_vpc_interface](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vpc_interface_module.rst)|Manages interface VPC configuration
 [cisco.nxos.nxos_vrf](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrf_module.rst)|(deprecated, removed after 2026-07-25) Manages global VRF configuration.
+[cisco.nxos.nxos_vrf_address_family](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrf_address_family_module.rst)|Resource module to configure VRF address family definitions.
 [cisco.nxos.nxos_vrf_af](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrf_af_module.rst)|Manages VRF AF.
 [cisco.nxos.nxos_vrf_global](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrf_global_module.rst)|Resource module to configure VRF definitions.
-[cisco.nxos.nxos_vrf_interface](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrf_interface_module.rst)|Manages interface specific VRF configuration.
+[cisco.nxos.nxos_vrf_interface](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrf_interface_module.rst)|(deprecated, removed after 2028-06-01) Manages interface specific VRF configuration.
+[cisco.nxos.nxos_vrf_interfaces](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrf_interfaces_module.rst)|Resource module to configure VRF interfaces.
 [cisco.nxos.nxos_vrrp](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vrrp_module.rst)|Manages VRRP configuration on NX-OS switches.
 [cisco.nxos.nxos_vsan](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vsan_module.rst)|Configuration of vsan for Cisco NXOS MDS Switches.
 [cisco.nxos.nxos_vtp_domain](https://github.com/ansible-collections/cisco.nxos/blob/main/docs/cisco.nxos.nxos_vtp_domain_module.rst)|Manages VTP domain configuration.
@@ -207,7 +198,7 @@ We welcome community contributions to this collection. If you find problems, ple
 You can also join us on:
 
 - IRC - the ``#ansible-network`` [libera.chat](https://libera.chat/) channel
-- Slack - https://ansiblenetwork.slack.com
+- Slack - [Ansible Network](https://ansiblenetwork.slack.com)
 
 See the [Ansible Community Guide](https://docs.ansible.com/ansible/latest/community/index.html) for details on contributing to Ansible.
 

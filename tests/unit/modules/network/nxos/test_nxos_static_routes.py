@@ -464,6 +464,8 @@ class TestNxosStaticRoutesModule(TestNxosModule):
             ip route 192.0.2.16/28 192.0.2.23 name replaced_route1 3
             ip route 192.0.2.16/28 Ethernet1/2 192.0.2.45 vrf destinationVRF name replaced_route2
             ip route 192.0.2.80/28 192.0.2.26 tag 12
+            ip route 192.0.2.80/28 Null0 name TEST
+            ip route 192.0.2.80/28 192.0.2.23 vrf ANSIBLE_TEST_NEW
             vrf context Test
               ip route 192.0.2.48/28 192.0.2.13
               ip route 192.0.2.48/28 192.0.2.14 5
@@ -548,6 +550,8 @@ class TestNxosStaticRoutesModule(TestNxosModule):
         commands = [
             "ip route 192.0.2.80/28 192.0.2.27 tag 13",
             "no ip route 192.0.2.80/28 192.0.2.26 tag 12",
+            "no ip route 192.0.2.80/28 Null0 name TEST",
+            "no ip route 192.0.2.80/28 192.0.2.23 vrf ANSIBLE_TEST_NEW",
             "vrf context trial_vrf",
             "ip route 192.0.2.0/28 192.0.2.23 name merged_route 1",
             "no ip route 192.0.2.64/28 192.0.2.22 tag 4",
@@ -1324,3 +1328,91 @@ class TestNxosStaticRoutesModule(TestNxosModule):
             },
         ]
         self.assertEqual(result["gathered"], compare_list, result["gathered"])
+
+    def test_delete_non_vrf_route_when_vrf_route_also_exists(self):
+        """
+        Tests the specific bug scenario: deleting a non-VRF route when an
+        identical route also exists in a different VRF.
+        The module should only target the non-VRF (global) route.
+        """
+        self.execute_show_command.return_value = dedent(
+            """\
+            ip route 192.0.2.0/24 192.0.2.22 name 2nd_hop
+            vrf context ANSIBLE_TEST_NEW
+              ip route 192.0.2.0/24 192.0.2.22 vrf ANSIBLE_TEST_NEW name 2nd_hop
+            """,
+        )
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "address_families": [
+                            {
+                                "afi": "ipv4",
+                                "routes": [
+                                    {
+                                        "dest": "192.0.2.0/24",
+                                        "next_hops": [
+                                            {
+                                                "forward_router_address": "192.0.2.22",
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                state="deleted",
+            ),
+        )
+        expected_commands = [
+            "no ip route 192.0.2.0/24 192.0.2.22 name 2nd_hop",
+        ]
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)
+
+    def test_delete_vrf_route_when_non_vrf_route_also_exists(self):
+        """
+        Tests specific the bug scenario: deleting a VRF route when an
+        identical route also exists in the global routing table.
+        The module should only target the VRF route and leave the global route alone.
+        """
+        self.execute_show_command.return_value = dedent(
+            """\
+            ip route 192.0.2.0/24 192.0.2.22 name 2nd_hop
+            vrf context ANSIBLE_TEST_NEW
+              ip route 192.0.2.0/24 192.0.2.22
+            """,
+        )
+        set_module_args(
+            dict(
+                config=[
+                    {
+                        "vrf": "ANSIBLE_TEST_NEW",
+                        "address_families": [
+                            {
+                                "afi": "ipv4",
+                                "routes": [
+                                    {
+                                        "dest": "192.0.2.0/24",
+                                        "next_hops": [
+                                            {
+                                                "forward_router_address": "192.0.2.22",
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                state="deleted",
+            ),
+        )
+        expected_commands = [
+            "vrf context ANSIBLE_TEST_NEW",
+            "no ip route 192.0.2.0/24 192.0.2.22",
+        ]
+        result = self.execute_module(changed=True)
+        self.assertEqual(result["commands"], expected_commands)

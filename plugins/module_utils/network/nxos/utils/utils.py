@@ -7,8 +7,6 @@ import socket
 from functools import total_ordering
 from itertools import count, groupby
 
-from ansible.module_utils.six import iteritems
-
 
 LOGGING_SEVMAP = {
     0: "emergency",
@@ -34,7 +32,7 @@ def flatten_dict(x):
     if not isinstance(x, dict):
         return result
 
-    for key, value in iteritems(x):
+    for key, value in x.items():
         if isinstance(value, dict):
             result.update(flatten_dict(value))
         else:
@@ -127,8 +125,8 @@ def remove_rsvd_interfaces(interfaces):
     return [i for i in interfaces if get_interface_type(i["name"]) != "management"]
 
 
-def vlan_range_to_list(vlans):
-    result = []
+def vlan_range_to_dict(vlans):
+    result = {}
     if vlans:
         for part in vlans.split(","):
             if part == "none":
@@ -136,11 +134,11 @@ def vlan_range_to_list(vlans):
             if "-" in part:
                 a, b = part.split("-")
                 a, b = int(a), int(b)
-                result.extend(range(a, b + 1))
+                for vlan in range(a, b + 1):
+                    result[str(vlan)] = vlan
             else:
                 a = int(part)
-                result.append(a)
-        return numerical_sort(result)
+                result[str(a)] = a
     return result
 
 
@@ -160,7 +158,7 @@ def get_logging_sevmap(invert=False):
     if invert:
         # cannot use dict comprehension yet
         # since we still test with Python 2.6
-        x = dict(map(reversed, iteritems(x)))
+        x = dict(map(reversed, x.items()))
     return x
 
 
@@ -182,6 +180,38 @@ def vlan_list_to_range(cmd):
     for v in get_ranges(cmd):
         ranges.append("-".join(map(str, (v[0], v[-1])[: len(v)])))
     return ",".join(ranges)
+
+
+def generate_switchport_trunk(type, add, vlans_range):
+    """
+    Generates a list of switchport commands based on the trunk type and VLANs range.
+    Ensures that the length of VLANs lexeme in a command does not exceed 220 characters.
+    """
+
+    def append_command():
+        command_prefix = f"switchport trunk {type} vlan "
+        if add or commands:
+            command_prefix += "add "
+        commands.append(command_prefix + ",".join(current_chunk))
+
+    commands = []
+    current_chunk = []
+    current_length = 0
+
+    for vrange in vlans_range.split(","):
+        next_addition = vrange if not current_chunk else "," + vrange
+        if current_length + len(next_addition) <= 220:
+            current_chunk.append(vrange)
+            current_length += len(next_addition)
+        else:
+            append_command()
+            current_chunk = [vrange]
+            current_length = len(vrange)
+
+    if current_chunk:
+        append_command()
+
+    return commands
 
 
 @total_ordering

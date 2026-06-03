@@ -4,6 +4,206 @@ Cisco Nxos Collection Release Notes
 
 .. contents:: Topics
 
+v11.2.0
+=======
+
+Minor Changes
+-------------
+
+- Added ``content`` parameter to support pre-rendered template configurations in nxos_config module
+- Updated ansible.netcommon dependency minimum required version from >=8.1.0 to >=8.5.1.
+- Updated ansible.netcommon dependency minimum required version from >=8.5.1 to >=8.5.2.
+- nxos_l2_interfaces - Add `trunk.allowed_vlans_none` option to explicitly configure `switchport trunk allowed vlan none` on interfaces.
+- which provides a cleaner alternative to the deprecated template auto-processing behavior of the ``src`` parameter.
+
+Deprecated Features
+-------------------
+
+- The ``src`` parameter's automatic Jinja2 template processing is deprecated and will be removed in March 2028 from nxos_config module
+- Use the ``content`` parameter with ``ansible.builtin.template`` lookup instead.
+
+Bugfixes
+--------
+
+- action plugins - Remove orphaned legacy action plugins ``acl_interface.py acl.py bgp_af.py``, ``bgp_neighbor_af.py bgp_neighbor.py bgp.py interface.py l2_interface.py l3_interface.py``, ``linkagg.py lldp.py logging.py ntp_auth.py ntp_options.py ntp.py ospf_vrf.py smu.py``, ``snmp_community.py snmp_contact.py snmp_host.py snmp_location.py snmp_traps.py snmp_user.py``, ``static_route.py vlan.py ospf.py`` that had no corresponding module.
+- action plugins - Rename multiple resource module action plugins to use the ``nxos_`` prefix to match their module names and fix ``action-plugin-docs`` sanity failures blocking Automation Hub certification.
+- meta/runtime.yml - Add ``plugin_routing.action`` redirects for all short-name aliases so alias-based invocations continue to resolve the renamed action plugins.
+- nxos_l2_interfaces - Fix VLAN range sorting to use numeric order instead of lexicographic string sorting, which caused incorrect range generation (e.g., "1,10,100,11" instead of "1-100").
+- nxos_l2_interfaces - Fix default allowed VLANs handling - trunk interfaces now correctly assume 1-4094 as default when no explicit allowed_vlans is configured.
+- nxos_l2_interfaces - Fix state handling logic for merged, replaced, overridden, and deleted states to correctly add/remove VLANs based on the desired state.
+- nxos_l2_interfaces - Fix to facts parsing when multiple vlan add lines are sent/parsed. These lines are now instead merged into a single command first via _flatten_vlan function, and then sent as data to be parsed
+- nxos_static_routes - Fixed incorrect deletion of route in VRF even when VRF is not specified.
+- plugins/action/nxos.py - Remove unused ``warnings`` list and unreachable dead code block that never executed due to ``warnings`` always being empty.
+
+Documentation Changes
+---------------------
+
+- nxos_interfaces - Added prerequisite note that ``system default switchport shutdown`` must not be enabled on the device for the module to function correctly.
+
+v11.1.3
+=======
+
+Bugfixes
+--------
+
+- cisco.nxos.nxos_facts - Fix AttributeError when interface has multiple IPv6 addrs and handle ROW_addr as list.
+
+v11.1.2
+=======
+
+Bugfixes
+--------
+
+- Fixed nxos_facts module so it can handle VLAN interface facts without any issue even if addr is not defined
+- Fixed nxos_static_routes module so to handle replaced and overridden state with vrf configuration.
+
+v11.1.1
+=======
+
+Bugfixes
+--------
+
+- cisco.nxos.nxos_hsrp_intefaces - Considers version 1 as default if configuration does not specify version.
+- cisco.nxos.nxos_hsrp_intefaces - Corrects idempotency issue when version is not specified in configuration.
+
+v11.1.0
+=======
+
+Minor Changes
+-------------
+
+- Added alias for mode option as switchport_mode for nxos_l2_interfaces
+
+Bugfixes
+--------
+
+- cisco.nxos.nxos_facts - Fix handling of facts for httapi type connection.
+- cisco.nxos.nxos_hsrp_interfaces - Fix parsers for preempt and priority
+- cisco.nxos.nxos_l2_interfaces - Fix cdp_enable config parsing.
+- cisco.nxos.nxos_l3_interfaces - Improved the code logic for handling redirects.
+- cisco.nxos.nxos_snmp_server - fixed communities parsing issue
+- cisco.nxos.nxos_static_routes - Fix facts parser to filter inline VRF routes from global route collection preventing incorrect VRF route deletion.
+
+Documentation Changes
+---------------------
+
+- Update support statement for the collection in README.md for MDS switches.
+
+v11.0.0
+=======
+
+Release Summary
+---------------
+
+With this release, the minimum required version of `ansible.netcommon` for this collection is `>=8.1.0`. The last version known to be compatible with `ansible-core<=2.18.x` is ansible.netcommon `v8.0.1` and cisco.nxos `v10.2.0`.
+
+Major Changes
+-------------
+
+- Bumping `dependencies` of ansible.netcommon to `>=8.1.0`, since previous versions of the dependency had compatibility issues with `ansible-core>=2.19`.
+
+Minor Changes
+-------------
+
+- cisco.nxos.nxos_l3_interfaces - Rewrite of l3_interfaces with bug fixes and enhancements.
+
+Bugfixes
+--------
+
+- cisco.nxos.nxos_vrf_global - Added support for rd attribute for nxos_vrf_global module.
+
+v10.2.0
+=======
+
+Minor Changes
+-------------
+
+- nxos_interfaces - Added service-policy, logging, mac-address and snmp configuration options for interface.
+- nxos_l2_interfaces - Enhances capability of the module to deal with addition attributes under l2 interfaces. Adds support for CDP, Link flap and beacon.
+
+Bugfixes
+--------
+
+- nxos_acls - Fix issue where Not sufficient TCAM bank error not being captured by error regex.
+
+v10.1.0
+=======
+
+Minor Changes
+-------------
+
+- hsrp_interfaces - Fixes and enhances capability of the module to deal with entire hsrp configuration under interfaces.
+
+Deprecated Features
+-------------------
+
+- nxos_hsrp - deprecate nxos.nxos.nxos_hsrp in favor of nxos.nxos.nxos_hsrp_interfaces.
+- nxos_vrf_interface - deprecate nxos.nxos.nxos_vrf_interface in favor of nxos.nxos.nxos_vrf_interfaces.
+
+v10.0.0
+=======
+
+Release Summary
+---------------
+
+With this release, the minimum required version of `ansible-core` for this collection is `2.16.0`. The last version known to be compatible with `ansible-core` versions below `2.16` is v5.1.2.
+
+Major Changes
+-------------
+
+- Bumping `requires_ansible` to `>=2.16.0`, since previous ansible-core versions are EoL now.
+
+Removed Features (previously deprecated)
+----------------------------------------
+
+- This release removes all deprecated plugins that have reached their end-of-life, including:
+- nxos_snmp_community
+- nxos_snmp_contact
+- nxos_snmp_host
+- nxos_snmp_location
+- nxos_snmp_user
+
+v9.4.0
+======
+
+Minor Changes
+-------------
+
+- nxos_vpc - Added support for peer-switch feature configuration.
+
+Bugfixes
+--------
+
+- nxos_facts - Fixes an issue in nxos_facts where IPv6 addresses within VRF contexts were not being collected in `net_all_ipv6_addresses`.
+- nxos_user - fixes wrong command being generated for purge function
+- nxos_vpc - fixes failure due to kickstart_ver_str not being present
+
+v9.3.0
+======
+
+Minor Changes
+-------------
+
+- Add support for VRF address family via `vrf_address_family` resource module.
+- Added nxos_vrf_interfaces resource module, that helps with configuration of vrfs within interface in favor of nxos_vrf_interface module.
+- nxos_telemetry - Added support for 'overridden' state to provide complete configuration override capabilities.
+
+Bugfixes
+--------
+
+- Fixed hardware fact gathering failure for CPU utilization parsing on NX-OS 9.3(3) by handling both list and single value formats of onemin_percent
+- Fixed the invalid feature name error for port-security by updating the feature mapping from `eth_port_sec` to `eth-port-sec`.
+- Fixes mixed usage of f-string and format string in action plugin for consistency.
+- Fixes nxos_user purge deleting non-local users,ensuring only local users are removed.
+- [bgp_templates] - fix the show commands used to ensure task does not fail if BGP is not enabled on the device.
+- lag_interfaces - Fix bug where lag interfaces was not erroring on command failure. (https://github.com/ansible-collections/cisco.nxos/pull/923)
+- nxos_l2_interfaces - Fixed handling of 'none' value in allowed_vlans to properly set trunk VLAN none
+
+New Modules
+-----------
+
+- nxos_vrf_address_family - Resource module to configure VRF address family definitions.
+
 v9.2.1
 ======
 
